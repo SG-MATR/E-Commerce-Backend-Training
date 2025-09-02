@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// @@map is used to change database name
+// @map is used to change column in the database
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique @db.VarChar(60)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at") // automatic update the date when the category is updated
+  products   Product[] // array because the relation between category and products is one to many 
+
+  @@map("categories")
+}
+
+// how the relation between these two tables will be
+// 1- every product you add will have Category id , so you must add anthor column in the child(product table) called categoryId
+// 2- stablish a connection between the two tables (parent and child)
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(120)
+  description String?  @db.Text()
+  price       Decimal  @db.Decimal(10, 2)
+  currency    String   @default("USD") @db.VarChar(3)
+  quantity    Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  categoryId  Int      @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id],onDelete: Cascade) // this is line for the connection and won't be showin in the database
+
+  @@map("products")
+}
+
+// @relation >> fields mean that what is the column in the child (product) model will save parent (category) id in 
+// @relation >> references mean that what is the column in the parent (category) you will connect the child (product) with
